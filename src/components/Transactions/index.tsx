@@ -21,6 +21,8 @@ export const Transactions: TransactionsComponent = ({ transactions }) => {
     return <div className="RampLoading--container">Loading...</div>
   }
 
+  console.log("transactions", transactions)
+
   return (
     <div data-testid="transaction-container">
       {transactions.map((transaction) => (

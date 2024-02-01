@@ -20,14 +20,16 @@ export function App() {
   )
 
   const loadAllTransactions = useCallback(async () => {
-    setIsLoading(true)
     transactionsByEmployeeUtils.invalidateData()
 
-    await employeeUtils.fetchAll()
-    await paginatedTransactionsUtils.fetchAll()
+    if (employees === null && !employeeUtils.loading) {
+      setIsLoading(true)
+      await employeeUtils.fetchAll()
+      setIsLoading(false)
+    }
 
-    setIsLoading(false)
-  }, [employeeUtils, paginatedTransactionsUtils, transactionsByEmployeeUtils])
+    await paginatedTransactionsUtils.fetchAll()
+  }, [employeeUtils, employees, paginatedTransactionsUtils, transactionsByEmployeeUtils])
 
   const loadTransactionsByEmployee = useCallback(
     async (employeeId: string) => {
@@ -64,8 +66,15 @@ export function App() {
             if (newValue === null) {
               return
             }
-
-            await loadTransactionsByEmployee(newValue.id)
+            if (newValue.id !== "") {
+              await loadTransactionsByEmployee(newValue.id)
+            } else if (
+              newValue.id === "" &&
+              newValue.firstName === "All" &&
+              newValue.lastName === "Employees"
+            ) {
+              await loadAllTransactions()
+            }
           }}
         />
 
@@ -74,17 +83,19 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} />
 
-          {transactions !== null && (
-            <button
-              className="RampButton"
-              disabled={paginatedTransactionsUtils.loading}
-              onClick={async () => {
-                await loadAllTransactions()
-              }}
-            >
-              View More
-            </button>
-          )}
+          {transactions !== null &&
+            transactionsByEmployee === null &&
+            paginatedTransactions?.nextPage !== null && (
+              <button
+                className="RampButton"
+                disabled={paginatedTransactionsUtils.loading}
+                onClick={async () => {
+                  await loadAllTransactions()
+                }}
+              >
+                View More
+              </button>
+            )}
         </div>
       </main>
     </Fragment>
